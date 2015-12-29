@@ -1,0 +1,300 @@
+module Cronologist
+  grammar Specification
+    rule specification
+      minute space hour space day space month space day_of_week {
+        def matches?(time)
+          [
+            minute.matches?(time.min),
+            hour.matches?(time.hour),
+            day.matches?(time.day),
+            month.matches?(time.month),
+            ((time.wday == 0)?
+              (day_of_week.matches?(0) or day_of_week.matches?(7)):
+              (day_of_week.matches(time.wday))
+            )
+          ].all?
+        end
+      }
+      / ('@yearly' / '@annually') {
+        def matches?(time)
+          [time.min, time.hour, time.day, time.month] == [0, 0, 1, 1]
+        end
+      }
+      / '@monthly' {
+        def matches?(time)
+          [time.min, time.hour, time.day] == [0, 0, 1]
+        end
+      }
+      / '@weekly' {
+        def matches?(time)
+          [time.min, time.hour, time.wday] == [0, 0, 0]
+        end
+      }
+      / ('@daily' / '@midnight') {
+        def matches?(time)
+          [time.min, time.hour] == [0, 0]
+        end
+      }
+      / '@hourly' {
+        def matches?(time)
+          time.min == 0
+        end
+      }
+      / '@every_minute' {
+        def matches?(time)
+          true
+        end
+      }
+    end
+
+    #####
+    ## Minute Specification
+    #####
+    rule minute
+      minute_range_with_step ',' minute {
+        def matches?(int)
+          minute_range_with_step.matches?(int) or minute.matches?(int)
+        end
+      }
+      / minute_range_with_step
+    end
+
+    rule minute_range_with_step
+      minute_range '/' step:numeric_const {
+        def matches?(int)
+          minute_range.matches?(int) and
+          (int % step.value) == (range.low_value % step.value)
+        end
+      }
+      / minute_range
+    end
+
+    rule minute_range
+      '*' {
+        def matches?(int); true; end
+        def low_value; 0; end
+      }
+      /
+        low:numeric_const &{|s| (0..59) === s[0].value }
+        '-'
+        high:numeric_const &{|s| (0..59) === s[2].value } {
+          def matches?(int)
+            low.value <= int and int <= high.value
+          end
+          def low_value; low.value; end
+      }
+      / numeric_const &{|s| (0..59) === s[0].value } {
+        def matches?(int); int == numeric_const.value; end
+        def low_value; numeric_const.value; end
+      }
+    end
+
+    #####
+    ## Hour Specification
+    #####
+    rule hour
+      hour_range_with_step ',' hour {
+        def matches?(int)
+          hour_range_with_step.matches?(int) or hour.matches?(int)
+        end
+      }
+      / hour_range_with_step
+    end
+
+    rule hour_range_with_step
+      hour_range '/' step:numeric_const {
+        def matches?(int)
+          hour_range.matches?(int) and
+          (int % step.value) == (range.low_value % step.value)
+        end
+      }
+      / hour_range
+    end
+
+    rule hour_range
+      '*' {
+        def matches?(int); true; end
+        def low_value; 0; end
+      }
+      /
+        low:numeric_const &{|s| (0..23) === s[0].value }
+        '-'
+        high:numeric_const &{|s| (0..23) === s[2].value } {
+          def matches?(int)
+            low.value <= int and int <= high.value
+          end
+          def low_value; low.value; end
+      }
+      / numeric_const &{|s| (0..23) === s[0].value } {
+        def matches?(int); int == numeric_const.value; end
+        def low_value; numeric_const.value; end
+      }
+    end
+
+    #####
+    ## Day Specification
+    #####
+    rule day
+      day_range_with_step ',' day {
+        def matches?(int)
+          day_range_with_step.matches?(int) or day.matches?(int)
+        end
+      }
+      / day_range_with_step
+    end
+
+    rule day_range_with_step
+      day_range '/' step:numeric_const {
+        def matches?(int)
+          day_range.matches?(int) and
+          (int % step.value) == (range.low_value % step.value)
+        end
+      }
+      / day_range
+    end
+
+    rule day_range
+      '*' {
+        def matches?(int); true; end
+        def low_value; 0; end
+      }
+      /
+        low:numeric_const &{|s| (1..31) === s[0].value }
+        '-'
+        high:numeric_const &{|s| (1..31) === s[2].value } {
+          def matches?(int)
+            low.value <= int and int <= high.value
+          end
+          def low_value; low.value; end
+      }
+      / numeric_const &{|s| (1..31) === s[0].value } {
+        def matches?(int); int == numeric_const.value; end
+        def low_value; numeric_const.value; end
+      }
+    end
+
+    #####
+    ## Month Specification
+    #####
+    rule month
+      month_range_with_step ',' month {
+        def matches?(int)
+          month_range_with_step.matches?(int) or month.matches?(int)
+        end
+      }
+      / month_range_with_step
+    end
+
+    rule month_range_with_step
+      month_range '/' step:numeric_const {
+        def matches?(int)
+          month_range.matches?(int) and
+          (int % step.value) == (range.low_value % step.value)
+        end
+      }
+      / month_range
+    end
+
+    rule month_range
+      '*' {
+        def matches?(int); true; end
+        def low_value; 0; end
+      }
+      /
+        low:(numeric_const / month_const) &{|s| (1..12) === s[0].value }
+        '-'
+        high:(numeric_const / month_const) &{|s| (1..12) === s[2].value } {
+          def matches?(int)
+            low.value <= int and int <= high.value
+          end
+          def low_value; low.value; end
+      }
+      / (numeric_const / month_const) &{|s| (1..12) === s[0].value } {
+        def matches?(int); int == numeric_const.value; end
+        def low_value; numeric_const.value; end
+      }
+    end
+
+    #####
+    ## Day of Week Specification
+    #####
+    rule day_of_week
+      day_of_week_range_with_step ',' day_of_week {
+        def matches?(int)
+          day_of_week_range_with_step.matches?(int) or day_of_week.matches?(int)
+        end
+      }
+      / day_of_week_range_with_step
+    end
+
+    rule day_of_week_range_with_step
+      day_of_week_range '/' step:numeric_const {
+        def matches?(int)
+          day_of_week_range.matches?(int) and
+          (int % step.value) == (range.low_value % step.value)
+        end
+      }
+      / day_of_week_range
+    end
+
+    rule day_of_week_range
+      '*' {
+        def matches?(int); true; end
+        def low_value; 0; end
+      }
+      /
+        low:(numeric_const / day_of_week_const) &{|s| (0..7) === s[0].value }
+        '-'
+        high:(numeric_const / day_of_week_const) &{|s| (0..7) === s[2].value } {
+          def matches?(int)
+            low.value <= int and int <= high.value
+          end
+          def low_value; low.value; end
+      }
+      / (numeric_const / day_of_week_const) &{|s| (0..7) === s[0].value } {
+        def matches?(int); int == numeric_const.value; end
+        def low_value; numeric_const.value; end
+      }
+    end
+
+    #####
+    ## Constants and whitespace
+    #####
+    rule numeric_const
+      [1-9][0-9]* {
+        def value
+          text_value.to_i(10)
+        end
+      }
+    end
+
+    rule month_const
+      'jan'   { def value;  1; end }
+      / 'feb' { def value;  2; end }
+      / 'mar' { def value;  3; end }
+      / 'apr' { def value;  4; end }
+      / 'may' { def value;  5; end }
+      / 'jun' { def value;  6; end }
+      / 'jul' { def value;  7; end }
+      / 'aug' { def value;  8; end }
+      / 'sep' { def value;  9; end }
+      / 'oct' { def value; 10; end }
+      / 'nov' { def value; 11; end }
+      / 'dec' { def value; 12; end }
+    end
+
+    rule day_of_week_const
+      'sun'   { def value;  0; end }
+      / 'mon' { def value;  1; end }
+      / 'tue' { def value;  2; end }
+      / 'wed' { def value;  3; end }
+      / 'thu' { def value;  4; end }
+      / 'fri' { def value;  5; end }
+      / 'sat' { def value;  6; end }
+    end
+
+    rule space
+      ' '*
+    end
+  end
+end
