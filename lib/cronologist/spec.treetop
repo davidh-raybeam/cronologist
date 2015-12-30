@@ -1,5 +1,5 @@
 module Cronologist
-  grammar Specification
+  grammar Spec
     rule specification
       minute space hour space day space month space day_of_week {
         def matches?(time)
@@ -10,7 +10,7 @@ module Cronologist
             month.matches?(time.month),
             ((time.wday == 0)?
               (day_of_week.matches?(0) or day_of_week.matches?(7)):
-              (day_of_week.matches(time.wday))
+              (day_of_week.matches?(time.wday))
             )
           ].all?
         end
@@ -63,7 +63,7 @@ module Cronologist
       minute_range '/' step:numeric_const {
         def matches?(int)
           minute_range.matches?(int) and
-          (int % step.value) == (range.low_value % step.value)
+          (int % step.value) == (minute_range.low_value % step.value)
         end
       }
       / minute_range
@@ -75,15 +75,15 @@ module Cronologist
         def low_value; 0; end
       }
       /
-        low:numeric_const &{|s| (0..59) === s[0].value }
+        low:numeric_const &{|s| (0..59) === s.last.value }
         '-'
-        high:numeric_const &{|s| (0..59) === s[2].value } {
+        high:numeric_const &{|s| (0..59) === s.last.value } {
           def matches?(int)
             low.value <= int and int <= high.value
           end
           def low_value; low.value; end
       }
-      / numeric_const &{|s| (0..59) === s[0].value } {
+      / numeric_const &{|s| (0..59) === s.last.value } {
         def matches?(int); int == numeric_const.value; end
         def low_value; numeric_const.value; end
       }
@@ -105,7 +105,7 @@ module Cronologist
       hour_range '/' step:numeric_const {
         def matches?(int)
           hour_range.matches?(int) and
-          (int % step.value) == (range.low_value % step.value)
+          (int % step.value) == (hour_range.low_value % step.value)
         end
       }
       / hour_range
@@ -117,15 +117,15 @@ module Cronologist
         def low_value; 0; end
       }
       /
-        low:numeric_const &{|s| (0..23) === s[0].value }
+        low:numeric_const &{|s| (0..23) === s.last.value }
         '-'
-        high:numeric_const &{|s| (0..23) === s[2].value } {
+        high:numeric_const &{|s| (0..23) === s.last.value } {
           def matches?(int)
             low.value <= int and int <= high.value
           end
           def low_value; low.value; end
       }
-      / numeric_const &{|s| (0..23) === s[0].value } {
+      / numeric_const &{|s| (0..23) === s.last.value } {
         def matches?(int); int == numeric_const.value; end
         def low_value; numeric_const.value; end
       }
@@ -147,7 +147,7 @@ module Cronologist
       day_range '/' step:numeric_const {
         def matches?(int)
           day_range.matches?(int) and
-          (int % step.value) == (range.low_value % step.value)
+          (int % step.value) == (day_range.low_value % step.value)
         end
       }
       / day_range
@@ -159,15 +159,15 @@ module Cronologist
         def low_value; 0; end
       }
       /
-        low:numeric_const &{|s| (1..31) === s[0].value }
+        low:numeric_const &{|s| (1..31) === s.last.value }
         '-'
-        high:numeric_const &{|s| (1..31) === s[2].value } {
+        high:numeric_const &{|s| (1..31) === s.last.value } {
           def matches?(int)
             low.value <= int and int <= high.value
           end
           def low_value; low.value; end
       }
-      / numeric_const &{|s| (1..31) === s[0].value } {
+      / numeric_const &{|s| (1..31) === s.last.value } {
         def matches?(int); int == numeric_const.value; end
         def low_value; numeric_const.value; end
       }
@@ -189,7 +189,7 @@ module Cronologist
       month_range '/' step:numeric_const {
         def matches?(int)
           month_range.matches?(int) and
-          (int % step.value) == (range.low_value % step.value)
+          (int % step.value) == (month_range.low_value % step.value)
         end
       }
       / month_range
@@ -201,15 +201,15 @@ module Cronologist
         def low_value; 0; end
       }
       /
-        low:(numeric_const / month_const) &{|s| (1..12) === s[0].value }
+        low:(numeric_const / month_const) &{|s| (1..12) === s.last.value }
         '-'
-        high:(numeric_const / month_const) &{|s| (1..12) === s[2].value } {
+        high:(numeric_const / month_const) &{|s| (1..12) === s.last.value } {
           def matches?(int)
             low.value <= int and int <= high.value
           end
           def low_value; low.value; end
       }
-      / (numeric_const / month_const) &{|s| (1..12) === s[0].value } {
+      / (numeric_const / month_const) &{|s| (1..12) === s.last.value } {
         def matches?(int); int == numeric_const.value; end
         def low_value; numeric_const.value; end
       }
@@ -231,7 +231,7 @@ module Cronologist
       day_of_week_range '/' step:numeric_const {
         def matches?(int)
           day_of_week_range.matches?(int) and
-          (int % step.value) == (range.low_value % step.value)
+          (int % step.value) == (day_of_week_range.low_value % step.value)
         end
       }
       / day_of_week_range
@@ -243,15 +243,15 @@ module Cronologist
         def low_value; 0; end
       }
       /
-        low:(numeric_const / day_of_week_const) &{|s| (0..7) === s[0].value }
+        low:(numeric_const / day_of_week_const) &{|s| (0..7) === s.last.value }
         '-'
-        high:(numeric_const / day_of_week_const) &{|s| (0..7) === s[2].value } {
+        high:(numeric_const / day_of_week_const) &{|s| (0..7) === s.last.value } {
           def matches?(int)
             low.value <= int and int <= high.value
           end
           def low_value; low.value; end
       }
-      / (numeric_const / day_of_week_const) &{|s| (0..7) === s[0].value } {
+      / (numeric_const / day_of_week_const) &{|s| (0..7) === s.last.value } {
         def matches?(int); int == numeric_const.value; end
         def low_value; numeric_const.value; end
       }
@@ -261,7 +261,7 @@ module Cronologist
     ## Constants and whitespace
     #####
     rule numeric_const
-      [1-9][0-9]* {
+      [0-9]+ {
         def value
           text_value.to_i(10)
         end
