@@ -1,5 +1,5 @@
-require "cronologist/version"
-
 module Cronologist
-  # Your code goes here...
 end
+
+require "cronologist/version"
+require "cronologist/specification"
